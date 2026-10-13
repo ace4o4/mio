@@ -1,0 +1,29 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Vite / Frontend build
+dist/
+dist-ssr/
+*.local
+
+# Tauri / Rust target builds
+src-tauri/target/
+src-tauri/gen/
+**/*.rs.bk
+
+# System / OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE / Editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/

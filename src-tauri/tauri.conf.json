@@ -1,0 +1,34 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "MIO",
+  "version": "0.1.0",
+  "identifier": "com.mio.island",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5180",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "MIO",
+        "width": 460,
+        "height": 650,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "center": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: https: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all"
+  }
+}
