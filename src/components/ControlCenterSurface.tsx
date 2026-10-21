@@ -12,8 +12,9 @@ interface ControlCenterSurfaceProps {
   onLevel: (key: "volume" | "brightness", value: number) => void;
   dnd: boolean;
   onToggleDnd: () => void;
-  onResetPosition: () => void;
-  onClose: () => void;
+  onResetPosition?: () => void;
+  onClose?: () => void;
+  showHeader?: boolean;
 }
 
 export const ControlCenterSurface: React.FC<ControlCenterSurfaceProps> = ({
@@ -23,40 +24,47 @@ export const ControlCenterSurface: React.FC<ControlCenterSurfaceProps> = ({
   dnd,
   onToggleDnd,
   onResetPosition,
-  onClose
+  onClose,
+  showHeader = false
 }) => {
   const [isPlaying, setIsPlaying] = React.useState(true);
 
   return (
     <div className="control-center-panel no-drag">
       {/* Panel Top Header */}
-      <div className="panel-header-row">
-        <div className="panel-title-group">
-          <span className="panel-badge-pip" />
-          <span className="panel-heading">Control Center</span>
-        </div>
+      {showHeader && (
+        <div className="panel-header-row">
+          <div className="panel-title-group">
+            <span className="panel-badge-pip" />
+            <span className="panel-heading">Control Center</span>
+          </div>
 
-        <div className="panel-header-actions">
-          <button
-            type="button"
-            className="panel-icon-btn"
-            onClick={onResetPosition}
-            title="Return to top-centre of screen"
-            aria-label="Return to top-centre"
-          >
-            <RotateCcw size={13} />
-          </button>
-          <button
-            type="button"
-            className="panel-icon-btn close-panel-btn"
-            onClick={onClose}
-            title="Dismiss panel (Esc)"
-            aria-label="Dismiss panel"
-          >
-            <X size={13} />
-          </button>
+          <div className="panel-header-actions">
+            {onResetPosition && (
+              <button
+                type="button"
+                className="panel-icon-btn"
+                onClick={onResetPosition}
+                title="Return to top-centre of screen"
+                aria-label="Return to top-centre"
+              >
+                <RotateCcw size={13} />
+              </button>
+            )}
+            {onClose && (
+              <button
+                type="button"
+                className="panel-icon-btn close-panel-btn"
+                onClick={onClose}
+                title="Dismiss panel (Esc)"
+                aria-label="Dismiss panel"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Primary 4-Tile Grid (Wi-Fi, Bluetooth, Battery, Focus) */}
       <div className="controls-tile-grid">

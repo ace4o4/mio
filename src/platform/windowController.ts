@@ -107,10 +107,10 @@ export function clampCoordinates(
   height: number,
   metrics: MonitorMetrics
 ): Position {
-  const minX = 8;
-  const maxX = Math.max(minX, metrics.width - width - 8);
-  const minY = 8;
-  const maxY = Math.max(minY, metrics.height - height - 8);
+  const minX = 0;
+  const maxX = Math.max(minX, metrics.width - width);
+  const minY = 0;
+  const maxY = Math.max(minY, metrics.height - height);
 
   return {
     x: Math.max(minX, Math.min(maxX, Math.round(x))),
@@ -119,12 +119,12 @@ export function clampCoordinates(
 }
 
 /**
- * Computes the canonical top-centre position (12-18px top inset).
+ * Computes the canonical top-centre position (pinned flush to top screen edge).
  */
 export function computeTopCenter(
   islandWidth: number,
   metrics: MonitorMetrics,
-  topInset = 14
+  topInset = 0
 ): Position {
   const x = Math.round((metrics.width - islandWidth) / 2);
   const y = topInset;
@@ -137,6 +137,7 @@ export function computeTopCenter(
 export class WindowController {
   private static instance: WindowController;
   private currentPos: Position | null = null;
+  private currentWidth: number = 210;
 
   static getInstance(): WindowController {
     if (!WindowController.instance) {
@@ -152,7 +153,7 @@ export class WindowController {
   async initPlacement(
     collapsedWidth: number,
     collapsedHeight: number,
-    topInset = 14
+    topInset = 0
   ): Promise<Position> {
     const metrics = await getMonitorMetrics();
     const saved = getSavedPosition();
@@ -165,6 +166,7 @@ export class WindowController {
     }
 
     this.currentPos = target;
+    this.currentWidth = collapsedWidth;
 
     if (isNativeApp()) {
       try {
@@ -181,6 +183,7 @@ export class WindowController {
 
   /**
    * Adjusts the window size and updates position anchors when expanding/collapsing.
+   * Maintains horizontal center alignment smoothly.
    */
   async resizeWindow(
     width: number,
@@ -193,9 +196,15 @@ export class WindowController {
       const win = getCurrentWindow();
       const metrics = await getMonitorMetrics();
 
-      const pos = anchorPos || this.currentPos || computeTopCenter(width, metrics, 14);
-      // Ensure expanded panel remains on screen
-      const clamped = clampCoordinates(pos.x, pos.y, width, height, metrics);
+      const prevCenterX = this.currentPos
+        ? this.currentPos.x + this.currentWidth / 2
+        : metrics.width / 2;
+      const targetX = Math.round(prevCenterX - width / 2);
+      const targetY = anchorPos ? anchorPos.y : (this.currentPos ? this.currentPos.y : 14);
+      const clamped = clampCoordinates(targetX, targetY, width, height, metrics);
+
+      this.currentPos = clamped;
+      this.currentWidth = width;
 
       await win.setPosition(new LogicalPosition(clamped.x, clamped.y));
       await win.setSize(new LogicalSize(width, height));
@@ -233,6 +242,7 @@ export class WindowController {
 
       const clamped = clampCoordinates(logicalX, logicalY, islandWidth, islandHeight, metrics);
       this.currentPos = clamped;
+      this.currentWidth = islandWidth;
       persistPosition(clamped);
 
       // Snap to clamped position if outside bounds
@@ -255,6 +265,7 @@ export class WindowController {
     const metrics = await getMonitorMetrics();
     const target = computeTopCenter(islandWidth, metrics, 14);
     this.currentPos = target;
+    this.currentWidth = islandWidth;
 
     if (isNativeApp()) {
       try {

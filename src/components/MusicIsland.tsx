@@ -7,13 +7,15 @@ import {
 interface MusicIslandProps {
   onSwitchToControls?: () => void;
   onSwitchToAssistant?: () => void;
-  onClose: () => void;
+  onClose?: () => void;
+  showHeader?: boolean;
 }
 
 export const MusicIsland: React.FC<MusicIslandProps> = ({
   onSwitchToControls,
   onSwitchToAssistant,
-  onClose
+  onClose,
+  showHeader = false
 }) => {
   const [isPlaying, setIsPlaying] = useState(true);
   // Match Image 2: 1:50 elapsed, -1:51 remaining (total 221 seconds)
@@ -89,44 +91,48 @@ export const MusicIsland: React.FC<MusicIslandProps> = ({
   return (
     <div className="music-island-exclusive no-drag">
       {/* Top Subtle Switcher Bar (Quickly toggle to Control Center or MIO) */}
-      <div className="music-island-top-bar">
-        <div className="music-island-brand-tag">
-          <span className="island-active-dot" />
-          <span>Now Playing</span>
-        </div>
+      {showHeader && (
+        <div className="music-island-top-bar">
+          <div className="music-island-brand-tag">
+            <span className="island-active-dot" />
+            <span>Now Playing</span>
+          </div>
 
-        <div className="music-island-actions">
-          {onSwitchToControls && (
-            <button
-              type="button"
-              className="island-subtle-switch-btn"
-              onClick={onSwitchToControls}
-              title="Switch to Control Center"
-            >
-              <Sliders size={12} />
-              <span>Controls</span>
-            </button>
-          )}
-          {onSwitchToAssistant && (
-            <button
-              type="button"
-              className="island-subtle-switch-btn"
-              onClick={onSwitchToAssistant}
-              title="Open MIO Assistant"
-            >
-              <Sparkles size={12} />
-            </button>
-          )}
-          <button
-            type="button"
-            className="island-subtle-switch-btn close-btn"
-            onClick={onClose}
-            title="Collapse (Esc)"
-          >
-            <X size={12} />
-          </button>
+          <div className="music-island-actions">
+            {onSwitchToControls && (
+              <button
+                type="button"
+                className="island-subtle-switch-btn"
+                onClick={onSwitchToControls}
+                title="Switch to Control Center"
+              >
+                <Sliders size={12} />
+                <span>Controls</span>
+              </button>
+            )}
+            {onSwitchToAssistant && (
+              <button
+                type="button"
+                className="island-subtle-switch-btn"
+                onClick={onSwitchToAssistant}
+                title="Open MIO Assistant"
+              >
+                <Sparkles size={12} />
+              </button>
+            )}
+            {onClose && (
+              <button
+                type="button"
+                className="island-subtle-switch-btn close-btn"
+                onClick={onClose}
+                title="Collapse (Esc)"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ------------------------------------------------------------- */}
       {/* ROW 1: STEVE JOBS ALBUM COVER + TITLE + LIVE WAVEFORM         */}

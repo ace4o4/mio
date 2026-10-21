@@ -44,6 +44,19 @@ export const MOTION_TOKENS = {
       damping: 22,
       mass: 0.75
     },
+    // Cinematic glide (~40% faster: snappy ~0.75s luxurious ease with zero jitter)
+    cinematicGlide: {
+      type: "spring" as const,
+      stiffness: 155,
+      damping: 19,
+      mass: 0.75
+    },
+    cinematicGlideOut: {
+      type: "spring" as const,
+      stiffness: 175,
+      damping: 22,
+      mass: 0.75
+    },
     bouncy: {
       type: "spring" as const,
       stiffness: 440,

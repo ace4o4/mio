@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ==========================================================================
-   MIO LIVING DYNAMIC ISLAND — DESIGN SYSTEM & TOKENS (SECTION 8)
+   MIO AUTONOMOUS TOP NOTCH — PURE OLED BLACK & BORDERLESS DESIGN SYSTEM
    ========================================================================== */
 
 :root {
@@ -15,24 +15,25 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 
-  /* Strict Palette Tokens (Section 8) */
+  /* Pure OLED Black & Dark Tokens */
   --oled-black: #000000;
-  --base-surface: #050507;
-  --raised-surface: #111116;
-  --hover-surface: #1B1B22;
-  --primary-text: #F5F5F7;
-  --secondary-text: #9696A2;
+  --base-surface: #000000;
+  --raised-surface: #0a0a0d;
+  --hover-surface: #141419;
+  
+  --primary-text: #FFFFFF;
+  --secondary-text: #8E8E93;
+  --muted-text: #56565C;
+
+  /* Accents */
+  --orange-accent: #FF9F43;
   --violet-accent: #B69CFF;
   --blue-accent: #72A7FF;
   --success: #67DDA5;
-  --warning: #F3C875;
   --error: #FF6B78;
 
-  /* Restrained Hairlines & Shadows */
-  --border-subtle: rgba(255, 255, 255, 0.09);
-  --border-focus: rgba(182, 156, 255, 0.45);
-  --shadow-island: 0 16px 40px rgba(0, 0, 0, 0.8), 0 4px 12px rgba(0, 0, 0, 0.6);
-  --shadow-panel: 0 24px 64px rgba(0, 0, 0, 0.9), 0 6px 18px rgba(0, 0, 0, 0.7);
+  /* Shadows: None (Zero glow, zero extra shadows) */
+  --shadow-notch: none;
 }
 
 * {
@@ -52,10 +53,8 @@ html, body, #root {
   height: 100%;
 }
 
-/* Accessible focus outlines for keyboard navigation (Section 9) */
 :focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 2px;
+  outline: none;
 }
 
 /* ==========================================================================
@@ -73,17 +72,12 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* Native mode (Tauri app): 100% transparent backing flush against monitor */
 .native-mode {
   background: transparent !important;
 }
 
-/* Web preview mode: Clean desktop canvas for testing */
 .preview-mode {
-  min-height: 100vh;
-  background:
-    radial-gradient(ellipse at 50% 10%, rgba(182, 156, 255, 0.07) 0%, transparent 60%),
-    linear-gradient(180deg, #0e0f14 0%, #050507 100%) !important;
+  background: transparent !important;
 }
 
 .preview-top-bar {
@@ -92,9 +86,9 @@ html, body, #root {
   left: 0;
   right: 0;
   height: 26px;
-  background: rgba(5, 5, 7, 0.4);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-subtle);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -103,6 +97,7 @@ html, body, #root {
   font-weight: 500;
   color: var(--secondary-text);
   z-index: 10;
+  pointer-events: none;
 }
 
 .preview-brand-tag {
@@ -111,662 +106,572 @@ html, body, #root {
 }
 
 /* ==========================================================================
-   THE LIVING DYNAMIC ISLAND CONTAINER (SECTION 2 & 8)
+   INVISIBLE TOP HOVER TRIGGER ZONE (Detects mouse near screen top edge)
    ========================================================================== */
 
-.island-anchor {
-  position: relative;
+.top-hover-trigger-hitbox {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 380px;
+  height: 28px;
+  z-index: 120;
+  pointer-events: auto;
+  background: transparent;
+}
+
+.top-hover-trigger-hitbox.hitbox-disabled {
+  pointer-events: none !important;
+}
+
+/* ==========================================================================
+   DYNAMIC TOP NOTCH ANCHOR & CINEMATIC SLIDE WRAPPER
+   ========================================================================== */
+
+.dynamic-notch-anchor {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 50;
-  margin-top: 14px; /* 12-18px safe top inset (Section 2) */
+  pointer-events: auto;
 }
 
-.native-mode .island-anchor {
-  margin-top: 0px; /* In native app, window itself is positioned with top inset */
+.mio-notch-motion-wrapper {
+  position: relative;
+  will-change: transform, width, height;
+  transform-origin: top center;
 }
 
-/* Main Container with Restrained Apple Morphing */
-.mio-island-container {
+/* Main Notch Shell: Pure OLED Black, Flush Top, Rounded Bottom, Zero Borders, Zero Glow */
+.dynamic-notch-shell {
   position: relative;
   background: var(--oled-black);
   color: var(--primary-text);
-  border: 1px solid var(--border-subtle);
-  box-shadow: var(--shadow-island);
+  border: none !important;
+  outline: none;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  box-shadow: none !important;
+  overflow: visible; /* To allow concave ears to attach cleanly to sides */
+  cursor: pointer;
+}
+
+.dynamic-notch-shell:hover {
+  box-shadow: none !important;
+}
+
+/* Content Area - Hugs Content Dynamically */
+.dynamic-notch-content {
+  position: relative;
+  z-index: 2;
   overflow: hidden;
-  transform-origin: top center;
-  transition:
-    background-color 0.14s ease,
-    border-color 0.14s ease,
-    box-shadow 0.14s ease;
-}
-
-/* Collapsed Geometry: 190-220px width, 44-50px height (Section 2) */
-.mio-island-container.island-state-collapsed {
-  width: 210px;
-  height: 46px;
-  border-radius: 9999px;
-  cursor: grab;
-  padding: 0 8px 0 10px;
-  display: flex;
-  align-items: center;
-}
-
-.mio-island-container.island-state-collapsed:active {
-  cursor: grabbing;
-}
-
-/* Expanded Geometry: 420-460px width, restrained rounded panel (Section 2) */
-.mio-island-container.island-state-control-center {
-  width: 440px;
-  min-height: 380px;
-  border-radius: 22px;
-  box-shadow: var(--shadow-panel);
-  padding: 14px 16px 16px 16px;
-}
-
-.mio-island-container.island-state-assistant {
-  width: 400px;
-  min-height: 340px;
-  border-radius: 22px;
-  box-shadow: var(--shadow-panel);
-  padding: 14px 16px 16px 16px;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
 }
 
 /* ==========================================================================
-   COLLAPSED ISLAND SURFACE & TARGETS (SECTION 2, 3, 4)
+   1. AGENT ACTIVITY VIEW (EXACT MATCH FOR USER REFERENCE SCREENSHOT)
    ========================================================================== */
 
-.collapsed-island-surface {
-  width: 100%;
-  height: 100%;
+.notch-activity-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  padding: 8px 18px 11px 18px;
+  min-width: 270px;
+  max-width: 440px;
+  width: auto;
 }
 
-/* Subtle hover feedback: 100-150 ms (Section 4) */
-.island-hovered {
-  border-color: rgba(255, 255, 255, 0.16);
-  background-color: var(--base-surface);
-}
-
-.island-pressed {
-  background-color: var(--raised-surface);
-}
-
-/* Separate Mascot Target: Clicking opens Assistant directly (Section 4) */
-.island-mascot-target {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 2px;
-  border-radius: 50%;
-  transition: transform 0.12s ease;
-}
-
-.island-mascot-target:hover {
-  transform: scale(1.05);
-}
-
-/* Mascot Wrapper */
-.mio-mascot-wrapper {
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-/* Non-interactive Drag & Identity Region (Section 3) */
-.island-identity-region {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 100%;
-  cursor: grab;
-}
-
-.island-brand-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--primary-text);
-  opacity: 0.9;
-}
-
-.island-drag-indicator {
-  width: 18px;
-  height: 3px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
-  transition: all 0.14s ease;
-}
-
-.island-hovered .island-drag-indicator {
-  background: rgba(255, 255, 255, 0.35);
-  width: 24px;
-}
-
-/* Activity Indicator Target (Section 2) */
-.island-activity-target {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
-}
-
-.island-subtle-indicator {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--blue-accent);
-  opacity: 0.8;
-}
-
-/* ==========================================================================
-   EXPANDED CONTROL CENTER SURFACE (SECTION 5)
-   ========================================================================== */
-
-.control-center-panel {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Header Row */
-.panel-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.panel-title-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.panel-badge-pip {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--violet-accent);
-}
-
-.panel-heading {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--primary-text);
-}
-
-.panel-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.panel-icon-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: var(--secondary-text);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: all 0.12s ease;
-}
-
-.panel-icon-btn:hover {
-  color: var(--primary-text);
-  background: var(--hover-surface);
-}
-
-/* 4-Tile Control Grid */
-.controls-tile-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.control-tile {
-  background: var(--raised-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  padding: 10px 12px;
+/* Stacked Text Info */
+.notch-text-stack {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.14s ease;
-  color: var(--primary-text);
-}
-
-.control-tile:hover {
-  background: var(--hover-surface);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.tile-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  color: var(--secondary-text);
-}
-
-.tile-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--primary-text);
-}
-
-.tile-sublabel {
-  font-size: 10px;
-  color: var(--secondary-text);
-}
-
-/* Tile Active States with strict Section 8 tokens */
-.tile-active-blue {
-  background: rgba(114, 167, 255, 0.12);
-  border-color: rgba(114, 167, 255, 0.35);
-}
-
-.tile-active-blue .tile-top-row {
-  color: var(--blue-accent);
-}
-
-.tile-active-violet {
-  background: rgba(182, 156, 255, 0.12);
-  border-color: rgba(182, 156, 255, 0.35);
-}
-
-.tile-active-violet .tile-top-row {
-  color: var(--violet-accent);
-}
-
-.status-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--secondary-text);
-  opacity: 0.4;
-}
-
-.status-on {
-  background: var(--blue-accent);
-  opacity: 1;
-}
-
-.status-violet {
-  background: var(--violet-accent);
-  opacity: 1;
-}
-
-.static-tile {
-  cursor: default;
-}
-
-.static-tile:hover {
-  background: var(--raised-surface);
-}
-
-.battery-green-icon {
-  color: var(--success);
-}
-
-.battery-num-tag {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--primary-text);
-}
-
-/* Sliders Stack (Sound & Brightness) */
-.sliders-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.slider-capsule {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--raised-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 8px 12px;
-}
-
-.slider-mute-btn {
-  background: transparent;
-  border: none;
-  color: var(--secondary-text);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: color 0.12s ease;
-}
-
-.slider-mute-btn:hover {
-  color: var(--primary-text);
-}
-
-.slider-icon-indicator {
-  color: var(--secondary-text);
-  display: grid;
-  place-items: center;
-}
-
-.slider-track-box {
-  flex: 1;
-  position: relative;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.range-input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  z-index: 2;
-}
-
-.range-fill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  background: var(--primary-text);
-  border-radius: 999px;
-  pointer-events: none;
-}
-
-.slider-value-display {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  color: var(--secondary-text);
-  min-width: 28px;
-  text-align: right;
-}
-
-/* Compact Media Strip */
-.compact-media-strip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--raised-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 8px 12px;
-}
-
-.media-thumbnail {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: var(--hover-surface);
-  display: grid;
-  place-items: center;
-  color: var(--blue-accent);
-}
-
-.media-meta-inline {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   min-width: 0;
 }
 
-.media-track-name {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--primary-text);
+/* Top subtitle line (e.g. "Read tooltip.tsx 63 lines") */
+.notch-subtitle-line {
+  font-size: 12px;
+  font-weight: 500;
+  color: #8E8E93;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.media-artist-name {
-  font-size: 10px;
-  color: var(--secondary-text);
-}
-
-.media-controls-inline {
+/* Primary Title line (e.g. "📙 Reading input.tsx") */
+.notch-primary-line {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
-.media-inline-btn {
-  width: 24px;
-  height: 24px;
+/* Crisp Activity Icon/Square without blurry glow */
+.notch-activity-glow-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2.5px;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: none !important;
+}
+
+.notch-title-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Subtle Mascot Pill on right */
+.notch-mascot-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
   border-radius: 50%;
-  background: transparent;
-  border: none;
-  color: var(--primary-text);
-  display: grid;
-  place-items: center;
   cursor: pointer;
-  transition: transform 0.12s ease;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
 }
 
-.media-inline-btn:hover {
+.notch-mascot-pill:hover {
   transform: scale(1.1);
 }
 
 /* ==========================================================================
-   EXPANDED ASSISTANT SURFACE (SECTION 6 & 7)
+   2. EXPANDED PROMPT INPUT (FITS SNUGLY TO COMMAND FORM)
    ========================================================================== */
 
-.assistant-surface-panel {
-  width: 100%;
-  height: 100%;
+.notch-input-row {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  padding: 10px 14px 12px 14px;
+  width: 390px;
 }
 
-.assistant-salute-box {
+.notch-prompt-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--raised-surface);
+  border-radius: 12px;
+  padding: 6px 10px;
+  border: none;
+}
+
+.notch-form-sparkle {
+  display: grid;
+  place-items: center;
+  color: var(--violet-accent);
+}
+
+.notch-text-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-family: var(--font-sans);
+}
+
+.notch-text-input::placeholder {
+  color: var(--secondary-text);
+}
+
+.notch-action-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--secondary-text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.notch-action-btn:hover {
+  color: #FFFFFF;
+  background: var(--hover-surface);
+}
+
+.send-action {
+  background: var(--violet-accent);
+  color: #000000;
+}
+
+.send-action:hover {
+  background: #c9b5ff;
+  color: #000000;
+}
+
+.notch-action-btn.recording {
+  background: var(--error) !important;
+  color: #FFFFFF !important;
+}
+
+.notch-chips-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 2px;
+}
+
+.notch-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--raised-surface);
+  border: none;
+  color: var(--secondary-text);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.notch-chip:hover {
+  background: var(--hover-surface);
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   PEEK INDICATOR GLINT (Visible when 90% tucked away)
+   ========================================================================== */
+
+.notch-tuck-chin-glint {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.notch-revealed .notch-tuck-chin-glint {
+  opacity: 0;
+}
+
+/* ==========================================================================
+   PURE OLED PITCH BLACK DESIGN SYSTEM (ZERO BORDERS, ZERO GLASS, PURE OLED)
+   ========================================================================== */
+
+/* 1. Top Horizontal Mascot Deck (Flush Attached to Top Screen Bezel with Smooth Concave Ears) */
+.mio-top-mascot-pod {
+  width: 328px;
+  height: 68px;
+  background: var(--oled-black);
+  border-top-left-radius: 0px !important;
+  border-top-right-radius: 0px !important;
+  border-bottom-left-radius: 22px;
+  border-bottom-right-radius: 22px;
+  border: none !important;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-sizing: border-box;
+  margin-top: 0;
+  margin-bottom: 8px;
+  pointer-events: auto;
+  cursor: pointer;
+  position: relative;
+  overflow: visible !important;
+  user-select: none;
+}
+
+.mio-mascot-deck-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.32);
+  font-family: var(--font-sans);
+  user-select: none;
+}
+
+.mio-mascot-deck-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.38);
+  font-family: var(--font-sans);
+  letter-spacing: 0.06em;
+  user-select: none;
+}
+
+.mio-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #67DDA5;
+}
+
+/* ==========================================================================
+   2. PURE OLED PITCH BLACK CHAT CARD SHELL
+   ========================================================================== */
+
+.mio-chat-bar-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mio-chat-card-shell {
+  background: var(--oled-black);
+  width: 368px;
+  box-sizing: border-box;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: hidden;
+  padding: 2px 8px;
+  position: relative;
+}
+
+.mio-chat-card-shell.is-expanded {
+  padding: 8px 12px 14px 12px;
+}
+
+.mio-chat-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 42px;
+}
+
+.mio-pill-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--secondary-text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.14s ease;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+.mio-pill-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mio-grid-btn {
+  color: #FFFFFF;
+  width: 34px;
+  height: 34px;
+  z-index: 10;
+}
+
+.mio-grid-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.mio-center-icon {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.mio-grid-icon {
+  display: block;
+}
+
+.mio-pill-form {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  height: 100%;
+}
+
+.mio-pill-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #FFFFFF;
+  font-size: 13.5px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+}
+
+.mio-pill-input::placeholder {
+  color: #8E8E93;
+  font-weight: 400;
+}
+
+.mio-pill-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.recording-active {
+  color: #FF5E57 !important;
+  background: rgba(255, 94, 87, 0.18) !important;
+}
+
+/* 2D Cute Animated Mascot Companion Pod */
+.mio-cute-face-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.mio-cute-face-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  overflow: visible;
+}
+
+.mio-cute-face-svg {
+  display: block;
+  filter: drop-shadow(0 0 5px rgba(255, 251, 234, 0.22));
+}
+
+.mio-face-reaction-bubble {
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #141418;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 50;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  letter-spacing: -0.01em;
+}
+
+/* 2-Column Options Collapsible Accordion Grid */
+.mio-options-collapsible-wrapper {
+  overflow: hidden;
+  width: 100%;
+}
+
+.mio-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 8px;
+  padding-top: 8px;
+  margin-top: 2px;
+  border-top: none;
+}
+
+.mio-options-col {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.assistant-salute-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--primary-text);
-}
-
-.assistant-salute-status {
-  font-size: 11px;
-  color: var(--secondary-text);
-}
-
-/* Text Input & Voice Capsule (Section 6 & 9) */
-.assistant-input-capsule {
+.mio-option-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: var(--raised-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 6px 8px 6px 12px;
-  transition: border-color 0.14s ease;
-}
-
-.assistant-input-capsule:focus-within {
-  border-color: var(--border-focus);
-}
-
-.assistant-text-field {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--primary-text);
-  font-size: 12px;
-  font-family: var(--font-sans);
-}
-
-.assistant-text-field::placeholder {
-  color: var(--secondary-text);
-}
-
-.assistant-action-icon-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--secondary-text);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: all 0.12s ease;
-}
-
-.assistant-action-icon-btn:hover {
-  color: var(--primary-text);
-  background: var(--hover-surface);
-}
-
-.mic-recording {
-  background: var(--error) !important;
-  color: #fff !important;
-}
-
-.send-btn {
-  background: var(--violet-accent);
-  color: #000;
-}
-
-.send-btn:hover {
-  background: #c9b5ff;
-  color: #000;
-}
-
-/* Quick Action Suggestion Chips */
-.quick-chips-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-}
-
-.quick-chip {
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--raised-surface);
-  border: 1px solid var(--border-subtle);
-  color: var(--secondary-text);
-  font-size: 10px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.12s ease;
-}
-
-.quick-chip:hover {
-  background: var(--hover-surface);
-  color: var(--primary-text);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-/* Approval Card (Section 6 & 7) */
-.approval-card {
-  background: rgba(243, 200, 117, 0.08);
-  border: 1px solid rgba(243, 200, 117, 0.28);
-  border-radius: 12px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.approval-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.approval-warning-icon {
-  color: var(--warning);
-}
-
-.approval-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--warning);
-}
-
-.approval-desc {
-  font-size: 11px;
-  color: var(--primary-text);
-}
-
-.approval-actions-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.approval-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 8px;
-  border: none;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.12s ease;
-}
-
-.approve-btn {
-  background: var(--success);
-  color: #000;
-}
-
-.deny-btn {
-  background: var(--hover-surface);
-  color: var(--secondary-text);
-}
-
-.deny-btn:hover {
-  color: var(--error);
-}
-
-/* Response Card */
-.assistant-response-card {
-  padding: 8px 12px;
+  gap: 10px;
+  padding: 7px 10px;
   border-radius: 10px;
-  background: var(--raised-surface);
-  border: 1px solid var(--border-subtle);
-  font-size: 11px;
-  color: var(--primary-text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.12s ease;
+  box-sizing: border-box;
 }
+
+.mio-option-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mio-option-item:active {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.mio-option-icon {
+  color: #D1D1D6;
+  flex-shrink: 0;
+  transition: color 0.12s ease;
+}
+
+.mio-option-item:hover .mio-option-icon {
+  color: #FFFFFF;
+}
+
+.mio-option-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.mio-floating-toast {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #141418;
+  color: #E2E2E8;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  border: none;
+  box-shadow: none;
+}
+
 
 /* ==========================================================================
-   REDUCED MOTION SUPPORT (SECTION 8)
+   REDUCED MOTION SUPPORT
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {

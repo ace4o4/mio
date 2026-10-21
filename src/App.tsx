@@ -1,45 +1,32 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import {
   WindowController,
   isNativeApp
 } from "./platform/windowController";
-import type { ControlSnapshot } from "./platform/controls";
-import {
-  getControlSnapshot,
-  setPreviewLevel,
-  setPreviewToggle
-} from "./platform/controls";
 import { MOTION_TOKENS, usePrefersReducedMotion } from "./utils/motion";
-
-import { CollapsedIsland } from "./components/CollapsedIsland";
-import { ControlCenterSurface } from "./components/ControlCenterSurface";
-import { AssistantSurface } from "./components/AssistantSurface";
-
-type PanelMode = "control_center" | "assistant" | null;
+import { MioChatBar } from "./components/MioChatBar";
+import { MioCuteFace } from "./components/MioCuteFace";
+import { NotchEarLeft, NotchEarRight } from "./components/NotchEars";
 
 export default function App() {
-  const [panelMode, setPanelMode] = useState<PanelMode>(null);
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [isApp, setIsApp] = useState(false);
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  // System Controls Snapshot
-  const [controlsState, setControlsState] = useState<ControlSnapshot>({
-    wifi: true,
-    bluetooth: true,
-    volume: 65,
-    brightness: 75,
-    battery: 88,
-    charging: true
-  });
-  const [dnd, setDnd] = useState(false);
-
   const containerRef = useRef<HTMLDivElement>(null);
-  const isDraggingRef = useRef(false);
-
+  const hoverIntentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const windowController = useRef(WindowController.getInstance()).current;
 
-  // 1. Initial Launch Placement & Native Check (Phase 1)
+  // Bar is active whenever revealed, pinned, options are open, or input is focused
+  const isFullyOpen = isRevealed || isPinned || isOptionsOpen || isInputFocused;
+
+  // 1. Initial Launch Placement (Flush against top bezel, topInset = 0)
   useEffect(() => {
     const runningNative = isNativeApp();
     setIsApp(runningNative);
@@ -49,186 +36,162 @@ export default function App() {
       document.body.classList.add("native-mode");
     }
 
-    // Initialize placement (top-centre with 14px top inset or restore valid saved position)
-    windowController.initPlacement(210, 46, 14);
-
-    // Fetch initial controls snapshot
-    getControlSnapshot().then(setControlsState);
+    // Initialize with topInset = 0
+    windowController.initPlacement(400, 140, 0);
   }, [windowController]);
 
-  // 2. Adjust Window Geometry on Expansion / Collapse (Phase 1 & 2)
+  // 2. Adjust Native Window Dimensions dynamically
+  // Keep window at 450px whenever isFullyOpen is true
   useEffect(() => {
     if (!isApp) return;
 
-    if (panelMode === "control_center") {
-      windowController.resizeWindow(440, 400);
-    } else if (panelMode === "assistant") {
-      windowController.resizeWindow(400, 360);
+    if (isFullyOpen) {
+      windowController.resizeWindow(400, 450);
     } else {
-      windowController.resizeWindow(210, 46);
+      // Tucked state: minimal 26px height so mouse clicks on rest of screen pass through
+      windowController.resizeWindow(400, 26);
     }
-  }, [panelMode, isApp, windowController]);
+  }, [isFullyOpen, isApp, windowController]);
 
-  // 3. Escape Key & Global Shortcut Handling (Section 4)
+  // 3. Intentional Hover Logic (120ms deliberate hover threshold)
+  const handleMouseEnter = useCallback(() => {
+    if (collapseTimerRef.current) {
+      clearTimeout(collapseTimerRef.current);
+      collapseTimerRef.current = null;
+    }
+
+    if (isFullyOpen) return;
+
+    if (hoverIntentTimerRef.current) {
+      clearTimeout(hoverIntentTimerRef.current);
+    }
+    hoverIntentTimerRef.current = setTimeout(() => {
+      setIsRevealed(true);
+      hoverIntentTimerRef.current = null;
+    }, 120);
+  }, [isFullyOpen]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (hoverIntentTimerRef.current) {
+      clearTimeout(hoverIntentTimerRef.current);
+      hoverIntentTimerRef.current = null;
+    }
+
+    // Do not collapse if options menu is open, input is focused, or pinned
+    if (isOptionsOpen || isInputFocused || isPinned) return;
+
+    if (collapseTimerRef.current) {
+      clearTimeout(collapseTimerRef.current);
+    }
+    collapseTimerRef.current = setTimeout(() => {
+      setIsRevealed(false);
+      collapseTimerRef.current = null;
+    }, 320);
+  }, [isOptionsOpen, isInputFocused, isPinned]);
+
+  // 4. Keyboard Shortcuts: Esc to close options or tuck away
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Escape closes expanded panel predictably
-      if (e.key === "Escape" && panelMode !== null) {
+      if (e.key === "Escape") {
         e.preventDefault();
-        setPanelMode(null);
+        if (isOptionsOpen) {
+          setIsOptionsOpen(false);
+        } else {
+          setIsPinned(false);
+          setIsRevealed(false);
+        }
       }
-
-      // Propose Ctrl/Cmd + Shift + Space to toggle Control Center
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === "Space") {
         e.preventDefault();
-        setPanelMode((prev) => (prev === null ? "control_center" : null));
+        setIsPinned((prev) => !prev);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [panelMode]);
+  }, [isOptionsOpen]);
 
-  // 4. Outside-Click / Blur Dismissal (Section 4)
-  useEffect(() => {
-    // Window defocus dismissal
-    const cleanupBlur = windowController.setupBlurListener(() => {
-      if (panelMode !== null) {
-        setPanelMode(null);
-      }
-    });
-
-    // In-browser click outside container
-    const handlePointerDownOutside = (e: MouseEvent) => {
-      if (panelMode === null) return;
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setPanelMode(null);
-      }
-    };
-
-    window.addEventListener("pointerdown", handlePointerDownOutside);
-    return () => {
-      cleanupBlur();
-      window.removeEventListener("pointerdown", handlePointerDownOutside);
-    };
-  }, [panelMode, windowController]);
-
-  // 5. Drag Handling with strict 5-7px threshold (Section 3)
-  const handleInitiateDrag = useCallback(() => {
-    isDraggingRef.current = true;
-    windowController.startDragging();
-  }, [windowController]);
-
-  const handleFinalizeDrag = useCallback(() => {
-    if (isDraggingRef.current) {
-      windowController.finalizeDrag(210, 46);
-      isDraggingRef.current = false;
-    }
-  }, [windowController]);
-
-  // 6. Reset Position to Top-Centre (Section 3)
-  const handleResetPosition = useCallback(() => {
-    windowController.resetToTopCenter(
-      panelMode === "control_center" ? 440 : panelMode === "assistant" ? 400 : 210,
-      panelMode === "control_center" ? 400 : panelMode === "assistant" ? 360 : 46
-    );
-  }, [panelMode, windowController]);
-
-  // 7. System Control Handlers (Platform-backed)
-  const handleToggle = async (key: "wifi" | "bluetooth") => {
-    setControlsState(await setPreviewToggle(key, !controlsState[key]));
+  const handleCommandSubmit = (command: string) => {
+    console.log("Executed command:", command);
   };
 
-  const handleLevel = async (key: "volume" | "brightness", value: number) => {
-    setControlsState(await setPreviewLevel(key, value));
+  const handleSelectOption = (optionId: string) => {
+    console.log("Selected option:", optionId);
   };
 
-  const transitionConfig = prefersReducedMotion
+  // Cinematic glide transition (~40% faster: smooth ~0.75s settle with zero harsh stops)
+  const glideTransition = prefersReducedMotion
     ? MOTION_TOKENS.reducedMotion
-    : MOTION_TOKENS.spring.island;
+    : isFullyOpen
+    ? MOTION_TOKENS.spring.cinematicGlide
+    : MOTION_TOKENS.spring.cinematicGlideOut;
 
   return (
-    <main
-      className={`mio-viewport ${isApp ? "native-mode" : "preview-mode"}`}
-      ref={containerRef}
-    >
-      {/* Browser Preview Status Bar */}
-      {!isApp && (
-        <header className="preview-top-bar">
-          <span className="preview-brand-tag">MIO Desktop Shell · Phase 1 & 2</span>
-          <span>Press Esc to collapse · Ctrl+Shift+Space to toggle</span>
-        </header>
-      )}
+    <main className="mio-viewport" ref={containerRef}>
+      {/* 
+        Invisible Top Hover Trigger Zone:
+        When revealed/open, pointer-events: none ensures 4-squares button and inputs get 100% of clicks!
+      */}
+      <div
+        className={`top-hover-trigger-hitbox ${isFullyOpen ? "hitbox-disabled" : ""}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      />
 
-      {/* The Dynamic Island Anchor */}
-      <div className="island-anchor">
+      {/* The Dynamic Chat Bar & Mascot Anchor (Flush to top screen edge) */}
+      <div
+        className="dynamic-notch-anchor"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <motion.div
-          layout
-          transition={transitionConfig}
-          className={`mio-island-container ${
-            panelMode === null
-              ? "island-state-collapsed"
-              : panelMode === "control_center"
-              ? "island-state-control-center"
-              : "island-state-assistant"
+          initial={{ y: "-90%" }}
+          animate={{
+            y: isFullyOpen ? "0px" : "-90%"
+          }}
+          transition={glideTransition}
+          className={`mio-notch-motion-wrapper ${
+            isFullyOpen ? "notch-revealed" : "notch-tucked"
           }`}
         >
-          <AnimatePresence mode="wait">
-            {panelMode === null ? (
-              /* COLLAPSED STATE (Section 2) */
-              <motion.div
-                key="collapsed"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: MOTION_TOKENS.duration.contentEntrance }}
-                style={{ width: "100%", height: "100%" }}
-              >
-                <CollapsedIsland
-                  onOpenAssistant={() => setPanelMode("assistant")}
-                  onOpenControlCenter={() => setPanelMode("control_center")}
-                  onInitiateDrag={handleInitiateDrag}
-                  onFinalizeDrag={handleFinalizeDrag}
-                  statusText="MIO"
-                />
-              </motion.div>
-            ) : panelMode === "control_center" ? (
-              /* EXPANDED CONTROL CENTER STATE (Section 5) */
-              <motion.div
-                key="control_center"
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: MOTION_TOKENS.duration.contentEntrance }}
-                style={{ width: "100%", height: "100%" }}
-              >
-                <ControlCenterSurface
-                  state={controlsState}
-                  onToggle={handleToggle}
-                  onLevel={handleLevel}
-                  dnd={dnd}
-                  onToggleDnd={() => setDnd(!dnd)}
-                  onResetPosition={handleResetPosition}
-                  onClose={() => setPanelMode(null)}
-                />
-              </motion.div>
-            ) : (
-              /* EXPANDED MIO ASSISTANT STATE (Section 6) */
-              <motion.div
-                key="assistant"
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: MOTION_TOKENS.duration.contentEntrance }}
-                style={{ width: "100%", height: "100%" }}
-              >
-                <AssistantSurface
-                  onResetPosition={handleResetPosition}
-                  onClose={() => setPanelMode(null)}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* 
+            Top Horizontal Mascot Deck (Apple Hard 3D Glass):
+            Horizontally covers the entire width of the bottom bar (368px)
+          */}
+          <div className="mio-top-mascot-pod" title="MIO 2D Companion">
+            {/* Concave Ears: Smooth outward curve connecting to top screen bezel */}
+            <NotchEarLeft size={20} fill="#000000" />
+            <NotchEarRight size={20} fill="#000000" />
+
+            <span className="mio-mascot-deck-tag">MIO</span>
+
+            {/* Centered Expressive 2D Mascot */}
+            <MioCuteFace
+              size={48}
+              transparentBg={true}
+              isRecording={isRecording}
+              isInputFocused={isInputFocused}
+            />
+
+            <div className="mio-mascot-deck-status">
+              <span className="mio-status-dot" />
+              <span>ACTIVE</span>
+            </div>
+          </div>
+
+          {/* Unified Floating Chat Bar with Smooth Expandable Options */}
+          <MioChatBar
+            isOptionsOpen={isOptionsOpen}
+            onOptionsToggle={(open) => setIsOptionsOpen(open)}
+            onInputFocusChange={(focused) => setIsInputFocused(focused)}
+            onSubmitCommand={handleCommandSubmit}
+            onSelectOption={handleSelectOption}
+            isRecording={isRecording}
+            onRecordingToggle={() => setIsRecording(!isRecording)}
+          />
+
+          {/* Peek Indicator Glint when tucked away */}
+          {!isFullyOpen && <div className="notch-tuck-chin-glint" />}
         </motion.div>
       </div>
     </main>

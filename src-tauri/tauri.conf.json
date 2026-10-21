@@ -14,13 +14,14 @@
       {
         "label": "main",
         "title": "MIO",
-        "width": 460,
-        "height": 440,
+        "width": 400,
+        "height": 450,
         "resizable": false,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
-        "center": false
+        "center": false,
+        "shadow": false
       }
     ],
     "security": {

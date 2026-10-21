@@ -3,24 +3,29 @@ import { MioMascot } from "./MioMascot";
 
 interface CollapsedIslandProps {
   onOpenAssistant: () => void;
-  onOpenMusic: () => void;
+  onOpenControlCenter?: () => void;
+  onOpenMusic?: () => void;
   onInitiateDrag: () => void;
   onFinalizeDrag: () => void;
   statusText?: string;
   isMusicPlaying?: boolean;
+  isHovered?: boolean;
 }
 
 const DRAG_THRESHOLD = 6; // Section 3: 5-7 CSS pixels
 
 export const CollapsedIsland: React.FC<CollapsedIslandProps> = ({
   onOpenAssistant,
+  onOpenControlCenter,
   onOpenMusic,
   onInitiateDrag,
   onFinalizeDrag,
   statusText = "MIO",
-  isMusicPlaying = true
+  isMusicPlaying = true,
+  isHovered: externalHovered
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const [internalHovered, setInternalHovered] = useState(false);
+  const isHovered = externalHovered !== undefined ? externalHovered : internalHovered;
   const [isPointerDown, setIsPointerDown] = useState(false);
 
   const startCoords = useRef<{ x: number; y: number } | null>(null);
@@ -74,8 +79,14 @@ export const CollapsedIsland: React.FC<CollapsedIslandProps> = ({
       return;
     }
 
-    // Stationary click -> open Music Island with bouncy spring!
-    onOpenMusic();
+    // Stationary click -> open island
+    if (onOpenControlCenter) {
+      onOpenControlCenter();
+    } else if (onOpenMusic) {
+      onOpenMusic();
+    } else {
+      onOpenAssistant();
+    }
   };
 
   return (
@@ -83,15 +94,17 @@ export const CollapsedIsland: React.FC<CollapsedIslandProps> = ({
       className={`collapsed-island-surface ${isHovered ? "island-hovered" : ""} ${
         isPointerDown ? "island-pressed" : ""
       }`}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        setInternalHovered(true);
+      }}
       onMouseLeave={() => {
-        setIsHovered(false);
+        setInternalHovered(false);
         setIsPointerDown(false);
       }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      title="MIO Island · Click to open Music Player · Click mascot for Assistant · Drag to move"
+      title="MIO Island · Hover to expand · Click mascot for Assistant · Drag to move"
     >
       {/* 1. SEPARATE MASCOT TARGET (Click mascot opens Assistant directly) */}
       <div
@@ -112,7 +125,15 @@ export const CollapsedIsland: React.FC<CollapsedIslandProps> = ({
       </div>
 
       {/* 3. MINI MUSIC ACTIVITY INDICATOR */}
-      <div className="island-activity-target" title="Now Playing: Steve Jobs">
+      <div
+        className="island-activity-target no-drag-target"
+        title="Now Playing: Steve Jobs"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onOpenMusic) onOpenMusic();
+          else onOpenAssistant();
+        }}
+      >
         {isMusicPlaying ? (
           <div className="collapsed-mini-eq">
             <span className="mini-eq-bar mini-bar-1" />

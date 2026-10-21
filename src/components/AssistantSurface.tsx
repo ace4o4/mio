@@ -3,13 +3,19 @@ import { Mic, Send, X, RotateCcw, Check, AlertCircle } from "lucide-react";
 import { MioMascot } from "./MioMascot";
 
 interface AssistantSurfaceProps {
-  onResetPosition: () => void;
-  onClose: () => void;
+  onResetPosition?: () => void;
+  onClose?: () => void;
+  showHeader?: boolean;
+  onInputFocus?: () => void;
+  onInputBlur?: () => void;
 }
 
 export const AssistantSurface: React.FC<AssistantSurfaceProps> = ({
   onResetPosition,
-  onClose
+  onClose,
+  showHeader = false,
+  onInputFocus,
+  onInputBlur
 }) => {
   const [query, setQuery] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -43,33 +49,39 @@ export const AssistantSurface: React.FC<AssistantSurfaceProps> = ({
   return (
     <div className="assistant-surface-panel no-drag">
       {/* Panel Top Header */}
-      <div className="panel-header-row">
-        <div className="panel-title-group">
-          <MioMascot size={20} isActive={true} />
-          <span className="panel-heading">MIO Assistant</span>
-        </div>
+      {showHeader && (
+        <div className="panel-header-row">
+          <div className="panel-title-group">
+            <MioMascot size={20} isActive={true} />
+            <span className="panel-heading">MIO Assistant</span>
+          </div>
 
-        <div className="panel-header-actions">
-          <button
-            type="button"
-            className="panel-icon-btn"
-            onClick={onResetPosition}
-            title="Return to top-centre of screen"
-            aria-label="Return to top-centre"
-          >
-            <RotateCcw size={13} />
-          </button>
-          <button
-            type="button"
-            className="panel-icon-btn close-panel-btn"
-            onClick={onClose}
-            title="Dismiss panel (Esc)"
-            aria-label="Dismiss panel"
-          >
-            <X size={13} />
-          </button>
+          <div className="panel-header-actions">
+            {onResetPosition && (
+              <button
+                type="button"
+                className="panel-icon-btn"
+                onClick={onResetPosition}
+                title="Return to top-centre of screen"
+                aria-label="Return to top-centre"
+              >
+                <RotateCcw size={13} />
+              </button>
+            )}
+            {onClose && (
+              <button
+                type="button"
+                className="panel-icon-btn close-panel-btn"
+                onClick={onClose}
+                title="Dismiss panel (Esc)"
+                aria-label="Dismiss panel"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Greeting and Status */}
       <div className="assistant-salute-box">
@@ -91,6 +103,8 @@ export const AssistantSurface: React.FC<AssistantSurfaceProps> = ({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onFocus={onInputFocus}
+          onBlur={onInputBlur}
           placeholder="Ask MIO or enter local action..."
           className="assistant-text-field"
           aria-label="Command query"

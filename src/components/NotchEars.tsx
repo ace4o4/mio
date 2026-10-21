@@ -4,7 +4,6 @@ interface NotchEarsProps {
   size?: number;
   className?: string;
   fill?: string;
-  strokeColor?: string;
 }
 
 /**
@@ -14,8 +13,7 @@ interface NotchEarsProps {
 export const NotchEarLeft: React.FC<NotchEarsProps> = ({
   size = 18,
   className = "notch-ear notch-ear-left",
-  fill = "#000000",
-  strokeColor = "rgba(255, 255, 255, 0.12)"
+  fill = "#000000"
 }) => {
   return (
     <svg
@@ -39,13 +37,6 @@ export const NotchEarLeft: React.FC<NotchEarsProps> = ({
         d="M 0,0 C 11.05,0 20,8.95 20,20 L 20,0 Z"
         fill={fill}
       />
-      {/* Subtle border hairline along the exposed concave edge */}
-      <path
-        d="M 0,0 C 11.05,0 20,8.95 20,20"
-        fill="none"
-        stroke={strokeColor}
-        strokeWidth="1.2"
-      />
     </svg>
   );
 };
@@ -53,8 +44,7 @@ export const NotchEarLeft: React.FC<NotchEarsProps> = ({
 export const NotchEarRight: React.FC<NotchEarsProps> = ({
   size = 18,
   className = "notch-ear notch-ear-right",
-  fill = "#000000",
-  strokeColor = "rgba(255, 255, 255, 0.12)"
+  fill = "#000000"
 }) => {
   return (
     <svg
@@ -77,13 +67,6 @@ export const NotchEarRight: React.FC<NotchEarsProps> = ({
       <path
         d="M 20,0 C 8.95,0 0,8.95 0,20 L 0,0 Z"
         fill={fill}
-      />
-      {/* Subtle border hairline along the exposed concave edge */}
-      <path
-        d="M 20,0 C 8.95,0 0,8.95 0,20"
-        fill="none"
-        stroke={strokeColor}
-        strokeWidth="1.2"
       />
     </svg>
   );

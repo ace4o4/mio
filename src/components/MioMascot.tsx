@@ -62,16 +62,14 @@ export const MioMascot: React.FC<MioMascotProps> = ({
           </linearGradient>
         </defs>
 
-        {/* Pebble Body Squircle */}
+        {/* Pebble Body Squircle - Pure minimal, borderless */}
         <rect
-          x="1.5"
-          y="1.5"
-          width="29"
-          height="29"
+          x="1"
+          y="1"
+          width="30"
+          height="30"
           rx="10"
           fill={isActive ? "url(#mascotActiveSurface)" : "url(#mascotSurface)"}
-          stroke={isActive ? "rgba(182, 156, 255, 0.4)" : "rgba(255, 255, 255, 0.12)"}
-          strokeWidth="1.2"
         />
 
         {/* Expressive Eyes */}
