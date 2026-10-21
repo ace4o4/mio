@@ -361,15 +361,17 @@ html, body, #root {
 
 .notch-tuck-chin-glint {
   position: absolute;
-  bottom: 2px;
+  bottom: 5px;
   left: 50%;
   transform: translateX(-50%);
-  width: 14px;
-  height: 2px;
+  width: 22px;
+  height: 2.5px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.25);
-  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+  transition: opacity 0.2s ease;
   pointer-events: none;
+  z-index: 10;
 }
 
 .notch-revealed .notch-tuck-chin-glint {
@@ -382,8 +384,8 @@ html, body, #root {
 
 /* 1. Top Horizontal Mascot Deck (Flush Attached to Top Screen Bezel with Smooth Concave Ears) */
 .mio-top-mascot-pod {
-  width: 328px;
-  height: 68px;
+  width: 360px;
+  height: 76px;
   background: var(--oled-black);
   border-top-left-radius: 0px !important;
   border-top-right-radius: 0px !important;
@@ -393,8 +395,7 @@ html, body, #root {
   box-shadow: none !important;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
+  justify-content: center;
   box-sizing: border-box;
   margin-top: 0;
   margin-bottom: 8px;
@@ -403,10 +404,28 @@ html, body, #root {
   position: relative;
   overflow: visible !important;
   user-select: none;
+  transform-origin: top center;
+}
+
+/* 6px upward bleed rectangle permanently covering the bezel so zero gap can ever show */
+.mio-top-mascot-pod::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: -1px;
+  right: -1px;
+  height: 6px;
+  background: var(--oled-black);
+  pointer-events: none;
+  z-index: 4;
 }
 
 .mio-mascot-deck-tag {
-  font-size: 11px;
+  position: absolute;
+  left: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.32);
@@ -414,23 +433,23 @@ html, body, #root {
   user-select: none;
 }
 
-.mio-mascot-deck-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.38);
-  font-family: var(--font-sans);
-  letter-spacing: 0.06em;
-  user-select: none;
+/* Green Internet Connected Online Dot (~45% smaller: 3.5px, placed in top corner) */
+.mio-online-indicator-dot {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 50%;
+  background: #34C759;
+  box-shadow: 0 0 5px rgba(52, 199, 89, 0.75);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  pointer-events: auto;
 }
 
-.mio-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #67DDA5;
+.mio-online-indicator-dot.is-offline {
+  background: #FF453A;
+  box-shadow: 0 0 4px rgba(255, 69, 58, 0.6);
 }
 
 /* ==========================================================================
@@ -448,7 +467,7 @@ html, body, #root {
 
 .mio-chat-card-shell {
   background: var(--oled-black);
-  width: 368px;
+  width: 360px;
   box-sizing: border-box;
   border: none !important;
   box-shadow: none !important;

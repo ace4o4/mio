@@ -7,6 +7,7 @@ interface MioCuteFaceProps {
   isInputFocused?: boolean;
   hasQuery?: boolean;
   transparentBg?: boolean;
+  isRevealed?: boolean;
   onClick?: () => void;
 }
 
@@ -18,6 +19,7 @@ export const MioCuteFace: React.FC<MioCuteFaceProps> = ({
   isInputFocused = false,
   hasQuery = false,
   transparentBg = false,
+  isRevealed = true,
   onClick
 }) => {
   const [isBlinking, setIsBlinking] = useState(false);
@@ -90,7 +92,7 @@ export const MioCuteFace: React.FC<MioCuteFaceProps> = ({
     };
   }, [isRecording, isHovered, isInputFocused]);
 
-  // 3. Reacting to Voice / Input Focus / Hover States
+  // 3. Reacting to Voice / Input Focus / Hover / Reveal States
   useEffect(() => {
     if (isRecording) {
       setMood("talking");
@@ -102,6 +104,17 @@ export const MioCuteFace: React.FC<MioCuteFaceProps> = ({
       setMood("idle");
     }
   }, [isRecording, isHovered, isInputFocused, hasQuery]);
+
+  // Cheerful wake-up greeting when expanding/revealing
+  useEffect(() => {
+    if (isRevealed) {
+      setMood("happy");
+      const t = setTimeout(() => {
+        setMood("idle");
+      }, 700);
+      return () => clearTimeout(t);
+    }
+  }, [isRevealed]);
 
   // 4. Click Interaction (Cute wink + happy greeting)
   const handleClick = (e: React.MouseEvent) => {

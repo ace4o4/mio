@@ -4,7 +4,7 @@ import {
   WindowController,
   isNativeApp
 } from "./platform/windowController";
-import { MOTION_TOKENS, usePrefersReducedMotion } from "./utils/motion";
+import { usePrefersReducedMotion } from "./utils/motion";
 import { MioChatBar } from "./components/MioChatBar";
 import { MioCuteFace } from "./components/MioCuteFace";
 import { NotchEarLeft, NotchEarRight } from "./components/NotchEars";
@@ -16,6 +16,9 @@ export default function App() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isApp, setIsApp] = useState(false);
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
   const prefersReducedMotion = usePrefersReducedMotion();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,24 +39,36 @@ export default function App() {
       document.body.classList.add("native-mode");
     }
 
-    // Initialize with topInset = 0
-    windowController.initPlacement(400, 140, 0);
+    // Initialize with topInset = 0 and height 32 for the sleek collapsed resting bulge
+    windowController.initPlacement(400, 32, 0);
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, [windowController]);
 
   // 2. Adjust Native Window Dimensions dynamically
-  // Keep window at 450px whenever isFullyOpen is true
+  // CRITICAL FIX: When collapsing, wait 700ms for the exit morph to completely finish
+  // before shrinking the native window to 32px (ample room for 16px bulge + hit target).
   useEffect(() => {
     if (!isApp) return;
 
     if (isFullyOpen) {
       windowController.resizeWindow(400, 450);
     } else {
-      // Tucked state: minimal 26px height so mouse clicks on rest of screen pass through
-      windowController.resizeWindow(400, 26);
+      const timer = setTimeout(() => {
+        windowController.resizeWindow(400, 32);
+      }, 700);
+      return () => clearTimeout(timer);
     }
   }, [isFullyOpen, isApp, windowController]);
 
-  // 3. Intentional Hover Logic (120ms deliberate hover threshold)
+  // 3. Intentional Hover Logic (100ms deliberate hover threshold)
   const handleMouseEnter = useCallback(() => {
     if (collapseTimerRef.current) {
       clearTimeout(collapseTimerRef.current);
@@ -68,7 +83,7 @@ export default function App() {
     hoverIntentTimerRef.current = setTimeout(() => {
       setIsRevealed(true);
       hoverIntentTimerRef.current = null;
-    }, 120);
+    }, 100);
   }, [isFullyOpen]);
 
   const handleMouseLeave = useCallback(() => {
@@ -86,7 +101,7 @@ export default function App() {
     collapseTimerRef.current = setTimeout(() => {
       setIsRevealed(false);
       collapseTimerRef.current = null;
-    }, 320);
+    }, 280);
   }, [isOptionsOpen, isInputFocused, isPinned]);
 
   // 4. Keyboard Shortcuts: Esc to close options or tuck away
@@ -119,13 +134,6 @@ export default function App() {
     console.log("Selected option:", optionId);
   };
 
-  // Cinematic glide transition (~40% faster: smooth ~0.75s settle with zero harsh stops)
-  const glideTransition = prefersReducedMotion
-    ? MOTION_TOKENS.reducedMotion
-    : isFullyOpen
-    ? MOTION_TOKENS.spring.cinematicGlide
-    : MOTION_TOKENS.spring.cinematicGlideOut;
-
   return (
     <main className="mio-viewport" ref={containerRef}>
       {/* 
@@ -144,55 +152,119 @@ export default function App() {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <motion.div
-          initial={{ y: "-90%" }}
-          animate={{
-            y: isFullyOpen ? "0px" : "-90%"
-          }}
-          transition={glideTransition}
-          className={`mio-notch-motion-wrapper ${
-            isFullyOpen ? "notch-revealed" : "notch-tucked"
-          }`}
-        >
+        <div className="mio-notch-motion-wrapper">
           {/* 
-            Top Horizontal Mascot Deck (Apple Hard 3D Glass):
-            Horizontally covers the entire width of the bottom bar (368px)
+            1. TOP MASCOT DECK (Fluid Morphing Elastic Shell)
+            Morphs downward and blooms outward from a compact resting chin into full deck!
           */}
-          <div className="mio-top-mascot-pod" title="MIO 2D Companion">
-            {/* Concave Ears: Smooth outward curve connecting to top screen bezel */}
-            <NotchEarLeft size={20} fill="#000000" />
-            <NotchEarRight size={20} fill="#000000" />
+          <motion.div
+            initial={false}
+            animate={{
+              y: isFullyOpen ? 0 : -60,
+              scaleX: isFullyOpen ? 1 : 0.62,
+              opacity: 1
+            }}
+            transition={
+              prefersReducedMotion
+                ? { duration: 0.1 }
+                : isFullyOpen
+                ? {
+                    type: "spring",
+                    stiffness: 280,
+                    damping: 28,
+                    mass: 0.8,
+                    bounce: 0
+                  }
+                : {
+                    duration: 0.35,
+                    ease: [0.32, 0, 0.67, 0]
+                  }
+            }
+            className="mio-top-mascot-pod"
+            title="MIO 2D Companion"
+          >
+            {/* Concave Ears: Smooth outward curve connecting to top screen bezel with 6px upward bleed */}
+            <NotchEarLeft size={22} fill="#000000" />
+            <NotchEarRight size={22} fill="#000000" />
 
-            <span className="mio-mascot-deck-tag">MIO</span>
+            <motion.span
+              className="mio-mascot-deck-tag"
+              animate={{ opacity: isFullyOpen ? 1 : 0 }}
+              transition={{ duration: 0.18 }}
+            >
+              MIO
+            </motion.span>
 
-            {/* Centered Expressive 2D Mascot */}
-            <MioCuteFace
-              size={48}
-              transparentBg={true}
-              isRecording={isRecording}
-              isInputFocused={isInputFocused}
+            {/* Centered Expressive 2D Mascot with Wake-Up Animation */}
+            <motion.div
+              animate={{
+                opacity: isFullyOpen ? 1 : 0
+              }}
+              transition={{ duration: 0.2 }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <MioCuteFace
+                size={54}
+                transparentBg={true}
+                isRecording={isRecording}
+                isInputFocused={isInputFocused}
+                isRevealed={isFullyOpen}
+              />
+            </motion.div>
+
+            {/* Tiny Green Online Dot (represents connected to internet) */}
+            <motion.span
+              className={`mio-online-indicator-dot ${isOnline ? "is-online" : "is-offline"}`}
+              title={isOnline ? "Connected to internet" : "Offline · No internet"}
+              aria-label={isOnline ? "Connected to internet" : "Offline"}
+              animate={{ opacity: isFullyOpen ? 1 : 0 }}
+              transition={{ duration: 0.18 }}
             />
 
-            <div className="mio-mascot-deck-status">
-              <span className="mio-status-dot" />
-              <span>ACTIVE</span>
-            </div>
-          </div>
+            {/* Peek Indicator Glint: Centered in the 16px collapsed bulge so user knows MIO is ok */}
+            {!isFullyOpen && <div className="notch-tuck-chin-glint" />}
+          </motion.div>
 
-          {/* Unified Floating Chat Bar with Smooth Expandable Options */}
-          <MioChatBar
-            isOptionsOpen={isOptionsOpen}
-            onOptionsToggle={(open) => setIsOptionsOpen(open)}
-            onInputFocusChange={(focused) => setIsInputFocused(focused)}
-            onSubmitCommand={handleCommandSubmit}
-            onSelectOption={handleSelectOption}
-            isRecording={isRecording}
-            onRecordingToggle={() => setIsRecording(!isRecording)}
-          />
-
-          {/* Peek Indicator Glint when tucked away */}
-          {!isFullyOpen && <div className="notch-tuck-chin-glint" />}
-        </motion.div>
+          {/* 
+            2. CHAT BAR (Staggered Fluid Cascade Drop)
+            Drops down out from behind the mascot deck with an organic spring cushion!
+          */}
+          <motion.div
+            initial={false}
+            animate={{
+              y: isFullyOpen ? 0 : -32,
+              scale: isFullyOpen ? 1 : 0.92,
+              opacity: isFullyOpen ? 1 : 0
+            }}
+            transition={
+              prefersReducedMotion
+                ? { duration: 0.1 }
+                : isFullyOpen
+                ? {
+                    type: "spring",
+                    stiffness: 240,
+                    damping: 22,
+                    mass: 0.8,
+                    delay: 0.05 // Organic stagger
+                  }
+                : {
+                    duration: 0.30,
+                    ease: [0.32, 0, 0.67, 0]
+                  }
+            }
+            style={{ pointerEvents: isFullyOpen ? "auto" : "none" }}
+          >
+            <MioChatBar
+              isOptionsOpen={isOptionsOpen}
+              onOptionsToggle={(open) => setIsOptionsOpen(open)}
+              onInputFocusChange={(focused) => setIsInputFocused(focused)}
+              onSubmitCommand={handleCommandSubmit}
+              onSelectOption={handleSelectOption}
+              isRecording={isRecording}
+              onRecordingToggle={() => setIsRecording(!isRecording)}
+            />
+          </motion.div>
+        </div>
       </div>
     </main>
   );
