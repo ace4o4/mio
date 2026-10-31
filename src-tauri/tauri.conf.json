@@ -15,7 +15,7 @@
         "label": "main",
         "title": "MIO",
         "width": 400,
-        "height": 450,
+        "height": 560,
         "resizable": false,
         "decorations": false,
         "transparent": true,
